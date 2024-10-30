@@ -1,1 +1,0 @@
-web: gunicorn ai_summarizer_app.wsgi:application 
