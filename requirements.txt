@@ -1,0 +1,10 @@
+django>=5.0.2
+psycopg2-binary>=2.9.9
+yt-dlp>=2023.12.30
+assemblyai>=0.18.0
+python-dotenv>=1.0.0
+dj-database-url
+gunicorn==21.1.0
+django-cloudinary-storage
+cloudinary
+whitenoise
