@@ -92,9 +92,9 @@ def yt_title(link):
 def download_audio(link):
     """Download audio from YouTube video link."""
     try:
-        # Use MEDIA_ROOT directly instead of creating an audio subfolder
-        media_path = settings.MEDIA_ROOT
-        os.makedirs(media_path, exist_ok=True)
+        # Create a temporary local file
+        temp_dir = '/tmp' if not settings.DEBUG else settings.MEDIA_ROOT
+        os.makedirs(temp_dir, exist_ok=True)
 
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -103,20 +103,30 @@ def download_audio(link):
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': os.path.join(media_path, '%(id)s.%(ext)s'),
+            'outtmpl': os.path.join(temp_dir, '%(id)s.%(ext)s'),
             'verbose': True
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             print("Starting download...")
             info = ydl.extract_info(link, download=True)
-            file_path = os.path.join(media_path, f"{info['id']}.mp3")
-            print(f"Download completed. File path: {file_path}")
+            temp_file_path = os.path.join(temp_dir, f"{info['id']}.mp3")
             
-            if not os.path.exists(file_path):
-                raise Exception(f"Audio file not found at {file_path}")
-                
-            return file_path
+            if not os.path.exists(temp_file_path):
+                raise Exception(f"Audio file not found at {temp_file_path}")
+            
+            # Upload to Cloudinary
+            from cloudinary.uploader import upload
+            result = upload(temp_file_path, 
+                          resource_type="auto",
+                          folder="youtube_audio")
+            
+            # Clean up the temporary file
+            os.remove(temp_file_path)
+            
+            # Return the Cloudinary URL
+            return result['url']
+            
     except Exception as e:
         print(f"Error in download_audio: {str(e)}")
         raise
@@ -125,8 +135,8 @@ def get_transcription(link):
     """Get transcription from audio file using AssemblyAI."""
     try:
         print("Starting download_audio...")
-        audio_file = download_audio(link)
-        print(f"Audio file downloaded successfully: {audio_file}")
+        audio_url = download_audio(link)  # This now returns a Cloudinary URL
+        print(f"Audio file uploaded successfully: {audio_url}")
         
         print("Setting up AssemblyAI...")
         aai.settings.api_key = "394cdb03355a4f3e89b331815f9337e6"
@@ -140,7 +150,7 @@ def get_transcription(link):
         )
         
         print("Starting transcription...")
-        transcript = transcriber.transcribe(audio_file, config=config)
+        transcript = transcriber.transcribe(audio_url, config=config)  # AssemblyAI can handle URLs directly
         print("Transcription completed successfully")
         
         if not transcript.text or not transcript.summary:
