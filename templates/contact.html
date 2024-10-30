@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - AI Video Summarizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+    <!-- Navbar -->
+    <nav class="gradient-bg text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="/" class="text-3xl font-bold mr-6">AI Video Summarizer</a>
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-button" class="md:hidden ml-auto">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Navigation links -->
+                <div id="mobile-menu" class="hidden w-full md:flex md:w-auto md:items-center mt-4 md:mt-0">
+                    {% if user.is_authenticated %}
+                        <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                            <span class="text-lg">Welcome, {{ user.username }}</span>
+                            <a href="/video-summaries" class="text-white hover:text-blue-200 transition-colors duration-200">Saved Video Summaries</a>
+                            <a href="{% url 'logout' %}" class="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-full transition-colors duration-200">Logout</a>
+                        </div>
+                    {% else %}
+                        <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                            <a href="/login" class="text-white hover:text-blue-200 transition-colors duration-200">Login</a>
+                            <a href="/signup" class="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-full transition-colors duration-200">Sign Up</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu on window resize if screen becomes larger
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) { // 768px is the md breakpoint in Tailwind
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    </script>
+
+    <!-- Main Content -->
+    <main class="container mx-auto mt-10 px-4 sm:px-6 lg:px-8 mb-16">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-4xl font-bold text-center mb-8">Contact Us</h1>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <!-- Responsive iframe wrapper -->
+                <div class="relative w-full overflow-hidden" style="padding-top: 137%;">
+                    <iframe 
+                        src="https://docs.google.com/forms/d/e/1FAIpQLSehziQSZg87sZJJ456eH5cXvgNTszF00dCLX9okCVKTdVZPfQ/viewform?embedded=true" 
+                        class="absolute top-0 left-0 bottom-0 right-0 w-full h-full"
+                        frameborder="0" 
+                        marginheight="0" 
+                        marginwidth="0"
+                    >
+                        Loading…
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-between">
+                <div class="w-full md:w-1/2 mb-6 md:mb-0">
+                    <h3 class="text-xl font-semibold mb-4">AI Video Summarizer</h3>
+                    <p class="text-gray-400">Transforming YouTube content into concise summaries with the power of AI.</p>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
+                        <li><a href="/#about" class="text-gray-400 hover:text-white transition-colors">About</a></li>
+                        <li><a href="/#services" class="text-gray-400 hover:text-white transition-colors">Services</a></li>
+                        <li><a href="/contact" class="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+                <p>&copy; 2023 AI Video Summarizer. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 

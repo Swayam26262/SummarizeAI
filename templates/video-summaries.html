@@ -1,0 +1,26 @@
+<!-- ... existing code ... -->
+
+<div class="container mx-auto mt-10 px-4 sm:px-0">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <section>
+            <h2 class="text-xl mb-4 font-semibold">Your Video Summaries</h2>
+            {% if video_summaries %}
+                <div class="space-y-4">
+                    {% for summary in video_summaries %}
+                    <div class="border border-gray-300 p-4 rounded-lg hover:shadow-lg transition-shadow duration-200">
+                        <a href="{% url 'summary-details' summary.id %}">
+                            <h3 class="text-lg font-semibold text-blue-600">{{summary.youtube_title}}</h3>
+                            <p class="text-gray-700 mt-2">{{summary.summary_content|truncatewords:50}}</p>
+                            <div class="mt-2 text-sm text-gray-500">Created: {{summary.created_at|date:"F j, Y"}}</div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-600">You haven't created any video summaries yet.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<!-- ... existing code ... --> 

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Video Summarizer</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .card-hover {
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @-webkit-keyframes rotate {
+        from {
+          -webkit-transform: rotate(0deg);
+        }
+        to {
+          -webkit-transform: rotate(360deg);
+        }
+      }
+
+      .load {
+        width: 100px;
+        height: 100px;
+        margin: 110px auto 0;
+        border: solid 10px #8822aa;
+        border-radius: 50%;
+        border-right-color: transparent;
+        border-bottom-color: transparent;
+        -webkit-transition: all 0.5s ease-in;
+        -webkit-animation-name: rotate;
+        -webkit-animation-duration: 1s;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-timing-function: linear;
+
+        transition: all 0.5s ease-in;
+        animation-name: rotate;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+      }
+
+      /* Update these styles in your existing style section */
+      .loader-wrapper {
+        position: relative;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        margin: 50px auto;  /* Added margin-top */
+        height: 100px;
+        width: 200px;  /* Added fixed width */
+      }
+
+      .loader-wrapper .packman {
+        position: absolute;
+        left: 50%;  /* Center the packman */
+        top: 50%;   /* Center the packman */
+        z-index: 2;  /* Place packman above dots */
+      }
+
+      .loader-wrapper .packman::before {
+        content: '';
+        position: absolute;
+        width: 50px;
+        height: 25px;
+        background-color: #667eea;
+        border-radius: 100px 100px 0 0;
+        transform: translate(-50%, -50%);
+        animation: pac-top 0.5s linear infinite;
+        transform-origin: center bottom;
+      }
+
+      .loader-wrapper .packman::after {
+        content: '';
+        position: absolute;
+        width: 50px;
+        height: 25px;
+        background-color: #667eea;
+        border-radius: 0 0 100px 100px;
+        transform: translate(-50%, 50%);
+        animation: pac-bot 0.5s linear infinite;
+        transform-origin: center top;
+      }
+
+      .dots {
+        position: absolute;
+        left: 63%;  /* Decreased from 65% to 63% to move dots slightly left */
+        top: 50%;   
+        transform: translateY(-25%);
+        z-index: 1;
+      }
+
+      .dots .dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #667eea;
+        margin-top: 7px;
+      }
+
+      /* Slightly adjusted dot positions */
+      .dots .dot:nth-child(1) {
+        left: 12px;  /* Decreased from 15px to 12px */
+        animation: dot-stage1 0.5s infinite;
+      }
+
+      .dots .dot:nth-child(2) {
+        left: 42px;  /* Decreased from 45px to 42px */
+        animation: dot-stage1 0.5s infinite;
+      }
+
+      .dots .dot:nth-child(3) {
+        left: 72px;  /* Decreased from 75px to 72px */
+        animation: dot-stage1 0.5s infinite;
+      }
+
+      .dots .dot:nth-child(4) {
+        left: 102px;  /* Decreased from 105px to 102px */
+        animation: dot-stage2 0.5s infinite;
+      }
+
+      /* Keep existing animations */
+      @keyframes pac-top {
+        0% { transform: translate(-50%, -50%) rotate(0) }
+        50% { transform: translate(-50%, -50%) rotate(-30deg) }
+        100% { transform: translate(-50%, -50%) rotate(0) }
+      }
+
+      @keyframes pac-bot {
+        0% { transform: translate(-50%, 50%) rotate(0) }
+        50% { transform: translate(-50%, 50%) rotate(30deg) }
+        100% { transform: translate(-50%, 50%) rotate(0) }
+      }
+
+      @keyframes dot-stage1 {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(-24px, 0); }
+      }
+
+      @keyframes dot-stage2 {
+        0% { transform: scale(1); }
+        5%, 100% { transform: scale(0); }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <header class="gradient-bg text-white py-6">
+      <div class="container mx-auto px-4">
+        <nav class="flex flex-wrap justify-between items-center">
+          <div class="flex items-center">
+            <a href="/" class="text-3xl font-bold mr-6">AI Video Summarizer</a>
+            <button id="mobile-menu-button" class="md:hidden ml-auto">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div id="mobile-menu" class="hidden w-full md:flex md:w-auto md:items-center mt-4 md:mt-0">
+            {% if user.is_authenticated %}
+              <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                <span class="text-lg">Welcome, {{ user.username }}</span>
+                <a href="/video-summaries" class="text-white hover:text-blue-200 transition-colors duration-200">Saved Video Summaries</a>
+                <a href="{% url 'logout' %}" class="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-full transition-colors duration-200">Logout</a>
+              </div>
+            {% else %}
+              <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                <a href="/login" class="text-white hover:text-blue-200 transition-colors duration-200">Login</a>
+                <a href="/signup" class="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-full transition-colors duration-200">Sign Up</a>
+              </div>
+            {% endif %}
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container mx-auto mt-10 px-4 sm:px-0">
+      <div
+        class="bg-white rounded-lg shadow-lg p-6 sm:p-10 max-w-4xl mx-auto card-hover"
+      >
+        <h2 class="text-2xl font-semibold mb-6">
+          Generate Summary from YouTube Video
+        </h2>
+        <form>
+          <div class="mb-6">
+            <label
+              for="youtube_url"
+              class="block text-sm font-medium text-gray-700 mb-2"
+              >YouTube Video URL</label
+            >
+            <input
+              type="url"
+              id="youtubeLink"
+              name="youtube_url"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            id="generateSummaryButton"
+            type="submit"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300"
+          >
+            Generate Summary
+          </button>
+        </form>
+
+        <!-- Update the loading section HTML -->
+        <div style="display: none" id="loading-circle" class="mt-8">
+          <div class="loader-wrapper">
+            <div class="packman"></div>
+            <div class="dots">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>
+          <p class="text-gray-600 mt-4 text-center" id="processing-message">Initializing...</p>
+        </div>
+
+        <!-- Generated Blog Display Section -->
+        <section class="mt-10 flex-grow">
+          <h2 class="text-xl mb-4 font-semibold">Generated Summary</h2>
+          <div id="summaryContent" class="mt-2 text-gray-700 space-y-4"></div>
+        </section>
+      </div>
+    </main>
+
+    <section id="about" class="py-16">
+      <div class="container mx-auto px-4 sm:px-0">
+        <h2 class="text-3xl font-bold text-center mb-8">
+          About AI Video Summarizer
+        </h2>
+        <div class="bg-white rounded-lg shadow-lg p-6 sm:p-10 max-w-4xl mx-auto card-hover">
+          <p class="text-gray-700 leading-relaxed">
+            AI Video Summarizer is a cutting-edge platform that leverages the power of artificial intelligence 
+            to transform YouTube content into concise, accurate video summaries. Our mission is to help users 
+            quickly understand video content by providing clear, well-structured summaries of any YouTube video.
+          </p>
+          
+          <h3 class="text-xl font-semibold mt-6 mb-4">How to Use</h3>
+          <div class="space-y-8">
+            <!-- Step 1 -->
+            <div class="flex flex-col items-start">
+              <div class="flex items-center mb-3">
+                <span class="flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full mr-3">1</span>
+                <p class="text-gray-700">Copy the URL of any YouTube video you want to summarize</p>
+              </div>
+              
+            </div>
+
+            <!-- Step 2 -->
+            <div class="flex flex-col items-start">
+              <div class="flex items-center mb-3">
+                <span class="flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full mr-3">2</span>
+                <p class="text-gray-700">Paste the URL into the input field</p>
+              </div>
+              <img src="https://i.imgur.com/1PfO09N.png" alt="Paste URL" class="rounded-lg shadow-md w-full max-w-2xl">
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flex flex-col items-start">
+              <div class="flex items-center mb-3">
+                <span class="flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full mr-3">3</span>
+                <p class="text-gray-700">Click "Generate Summary" and wait for processing</p>
+              </div>
+              <img src="https://i.imgur.com/r7ybzDa.png" alt="Generate Summary" class="rounded-lg shadow-md w-full max-w-2xl">
+            </div>
+
+            <!-- Step 4 -->
+            <div class="flex flex-col items-start">
+              <div class="flex items-center mb-3">
+                <span class="flex items-center justify-center w-6 h-6 bg-blue-600 text-white rounded-full mr-3">4</span>
+                <p class="text-gray-700">Review your generated summary</p>
+              </div>
+              <img src="https://i.imgur.com/iWx3kzY.png" alt="Review Summary" class="rounded-lg shadow-md w-full max-w-2xl">
+            </div>
+          </div>
+
+          <p class="text-gray-700 leading-relaxed mt-6">
+            Founded by a team of AI enthusiasts and content marketing experts, we strive to bridge the gap 
+            between video and text-based content, making it easier for creators to maximize the value of 
+            their work across multiple platforms.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="services" class="py-16 gradient-bg text-white">
+      <div class="container mx-auto px-4 sm:px-0">
+        <h2 class="text-3xl font-bold text-center mb-8">Our Services</h2>
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div
+            class="bg-white rounded-lg shadow-lg p-6 sm:p-10 text-gray-800 card-hover"
+          >
+            <h3 class="text-xl font-semibold mb-4">
+              YouTube Video Summarization
+            </h3>
+            <p class="text-gray-700">
+              Transform your YouTube videos into clear, concise summaries.
+              Our AI-powered system analyzes your video content, extracts key information,
+              and generates high-quality summaries that capture the main points and key takeaways
+              from your videos.
+            </p>
+          </div>
+          <div
+            class="bg-white rounded-lg shadow-lg p-6 sm:p-10 text-gray-800 card-hover"
+          >
+            <h3 class="text-xl font-semibold mb-4">SEO Optimization</h3>
+            <p class="text-gray-700">
+              Enhance your content's visibility with AI-powered SEO
+              optimization. Our system performs in-depth keyword research,
+              strategically incorporates relevant terms, and generates optimized
+              meta tags and descriptions. This ensures that your blog posts are
+              not only informative but also primed for search engine success.
+            </p>
+          </div>
+          <div
+            class="bg-white rounded-lg shadow-lg p-6 sm:p-10 text-gray-800 card-hover"
+          >
+            <h3 class="text-xl font-semibold mb-4">Content Repurposing</h3>
+            <p class="text-gray-700">
+              Expand your content strategy by repurposing your videos into
+              various formats. Our AI can create social media posts, email
+              newsletters, and other content types based on your YouTube videos.
+              This multi-platform approach helps you reach a wider audience and
+              maximize the impact of your original content.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <footer class="bg-gray-800 text-white py-8">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-wrap justify-between">
+          <div class="w-full md:w-1/2 mb-6 md:mb-0">
+            <h3 class="text-xl font-semibold mb-4">AI Video Summarizer</h3>
+            <p class="text-gray-400">
+              Transforming YouTube content into clear, concise summaries with the
+              power of AI.
+            </p>
+          </div>
+          <div class="w-full md:w-1/2">
+            <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+            <ul class="space-y-2">
+              <li>
+                <a
+                  href="/"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#about"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >About</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#services"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Services</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/contact"
+                  class="text-gray-400 hover:text-white transition-colors"
+                  >Contact</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div
+          class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400"
+        >
+          <p>&copy; 2023 AI Video Summarizer. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document
+        .getElementById("generateSummaryButton")
+        .addEventListener("click", async (e) => {
+          e.preventDefault();
+          const youtubeLink = document.getElementById("youtubeLink").value;
+          const summaryContent = document.getElementById("summaryContent");
+          const loadingCircle = document.getElementById("loading-circle");
+          const processingMessage = document.getElementById("processing-message");
+
+          if (youtubeLink) {
+            loadingCircle.style.display = "block";
+            summaryContent.innerHTML = "";
+
+            const updateProcessingMessage = (message) => {
+              processingMessage.textContent = message;
+            };
+
+            const endpointUrl = "/generate-summary";
+
+            try {
+              updateProcessingMessage("Starting to process your video...");
+              
+              const response = await fetch(endpointUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ link: youtubeLink }),
+              });
+
+              // Set up Server-Sent Events to receive progress updates
+              const eventSource = new EventSource(`/progress?link=${encodeURIComponent(youtubeLink)}`);
+              
+              eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                updateProcessingMessage(data.message);
+              };
+
+              const data = await response.json();
+
+              if (data.content) {
+                eventSource.close(); // Close the event source
+                updateProcessingMessage("Summary generated successfully!");
+                
+                // Format the content with proper spacing and paragraphs
+                const formattedContent = data.content
+                  .split('\n')
+                  .map(paragraph => `<p class="mb-4">${paragraph}</p>`)
+                  .join('');
+                
+                summaryContent.innerHTML = formattedContent;
+              } else {
+                eventSource.close(); // Close the event source
+                updateProcessingMessage("Failed to generate summary.");
+                summaryContent.innerHTML = '<p class="text-red-500">Failed to generate summary. Please try again.</p>';
+              }
+            } catch (error) {
+              console.error("Error occurred:", error);
+              updateProcessingMessage("An error occurred.");
+              summaryContent.innerHTML = '<p class="text-red-500">Something went wrong. Please try again later.</p>';
+            } finally {
+              loadingCircle.style.display = "none";
+            }
+          } else {
+            alert("Please enter a YouTube link.");
+          }
+        });
+
+      // Mobile menu toggle
+      const mobileMenuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+      });
+
+      // Close mobile menu on window resize if screen becomes larger
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) { // 768px is the md breakpoint in Tailwind
+          mobileMenu.classList.add('hidden');
+        }
+      });
+    </script>
+  </body>
+</html>
