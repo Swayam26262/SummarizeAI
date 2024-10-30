@@ -33,7 +33,16 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-default-secret-key-for-develop
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'  # Default to False for safety
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [
+    'summarizeai-grcq.onrender.com',  # Add your Render domain
+    'localhost',
+    '127.0.0.1',
+]
+
+# Add CSRF_TRUSTED_ORIGINS for secure forms
+CSRF_TRUSTED_ORIGINS = [
+    'https://summarizeai-grcq.onrender.com',  # Add your Render domain with https://
+]
 
 
 # Application definition
@@ -158,4 +167,13 @@ CLOUDINARY_STORAGE = {
 
 # Media files configuration
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Add SECURE_PROXY_SSL_HEADER
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Add security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
