@@ -101,6 +101,10 @@ DATABASES = {
     )
 }
 
+DATABASES['default'] = dj_database_url.parse(os.getenv('DATABASE_URL'))
+
+#postgresql://ai_summarizer_database_user:Un0HHPbO6LHqaZSjkVMG2P3ms9PsOwgV@dpg-cshm8eu8ii6s73bhiib0-a.oregon-postgres.render.com/ai_summarizer_database
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
