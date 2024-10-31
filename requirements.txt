@@ -8,3 +8,4 @@ gunicorn==21.1.0
 django-cloudinary-storage
 cloudinary
 whitenoise
+dj-database-url==2.3.0
