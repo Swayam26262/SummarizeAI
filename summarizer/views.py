@@ -26,73 +26,90 @@ def generate_summary(request):
             yt_link = unquote(data['link'])
             print(f"Processing YouTube link: {yt_link}")
             
-            # Update progress message
             request.session['progress_message'] = "Processing YouTube link..."
             
+            # Validate YouTube URL
+            if not ('youtube.com' in yt_link or 'youtu.be' in yt_link):
+                return JsonResponse({'error': 'Invalid YouTube URL'}, status=400)
+            
+            try:
+                request.session['progress_message'] = "Fetching video title..."
+                title = yt_title(yt_link)
+                
+                if not title:
+                    return JsonResponse({'error': 'Could not access video. Please check the URL.'}, status=400)
+                
+                # Get the transcription and summary
+                request.session['progress_message'] = "Downloading audio file..."
+                audio_file = download_audio(yt_link)
+                
+                request.session['progress_message'] = "Converting audio to text..."
+                result = get_transcription(yt_link)
+                
+                transcription = result['transcription']
+                summary_content = result['summary']
+                
+                request.session['progress_message'] = "Processing completed, generating summary..."
+                
+            except Exception as e:
+                import traceback
+                print(f"Processing error: {str(e)}")
+                print(traceback.format_exc())
+                return JsonResponse({'error': f"Error: {str(e)}"}, status=400)
+
+            if not transcription or not summary_content:
+                return JsonResponse({'error': "Failed to process video"}, status=500)
+
+            try:
+                request.session['progress_message'] = "Saving summary to database..."
+                new_summary = VideoSummary.objects.create(
+                    user=request.user,
+                    youtube_title=title,
+                    youtube_link=yt_link,
+                    summary_content=summary_content,
+                )
+                new_summary.save()
+                
+                request.session['progress_message'] = "Summary generated successfully!"
+                return JsonResponse({'content': summary_content})
+                
+            except Exception as e:
+                import traceback
+                print(f"Database error: {str(e)}")
+                print(traceback.format_exc())
+                return JsonResponse({'error': f"Error: {str(e)}"}, status=500)
+
         except (KeyError, json.JSONDecodeError) as e:
             print(f"Data parsing error: {str(e)}")
             return JsonResponse({'error': 'Invalid data sent'}, status=400)
-
-        try:
-            # Get YouTube video title
-            request.session['progress_message'] = "Fetching video title..."
-            title = yt_title(yt_link)
-            
-            # Get the transcription and summary
-            request.session['progress_message'] = "Downloading audio file..."
-            audio_file = download_audio(yt_link)
-            
-            request.session['progress_message'] = "Converting audio to text..."
-            result = get_transcription(yt_link)
-            
-            transcription = result['transcription']
-            summary_content = result['summary']
-            
-            request.session['progress_message'] = "Processing completed, generating summary..."
-            
-        except Exception as e:
-            import traceback
-            print(f"Processing error: {str(e)}")
-            print(traceback.format_exc())
-            return JsonResponse({'error': f"Error: {str(e)}"}, status=400)
-
-        if not transcription or not summary_content:
-            return JsonResponse({'error': "Failed to process video"}, status=500)
-
-        try:
-            request.session['progress_message'] = "Saving summary to database..."
-            new_summary = VideoSummary.objects.create(
-                user=request.user,
-                youtube_title=title,
-                youtube_link=yt_link,
-                summary_content=summary_content,
-            )
-            new_summary.save()
-            
-            request.session['progress_message'] = "Summary generated successfully!"
-            return JsonResponse({'content': summary_content})
-            
-        except Exception as e:
-            import traceback
-            print(f"Database error: {str(e)}")
-            print(traceback.format_exc())
-            return JsonResponse({'error': f"Error: {str(e)}"}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 def yt_title(link):
     """Fetch the YouTube video title."""
     ydl_opts = {
-        'format': 'best',
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': True,
+        'no_color': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-us,en;q=0.5',
+            'Sec-Fetch-Mode': 'navigate',
+        }
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(link, download=False)
-        return info.get('title')
+        try:
+            info = ydl.extract_info(link, download=False)
+            return info.get('title')
+        except Exception as e:
+            print(f"Error in yt_title: {str(e)}")
+            raise
 
 def download_audio(link):
     """Download audio from YouTube video link."""
     try:
-        # Create a temporary local file
         temp_dir = '/tmp' if not settings.DEBUG else settings.MEDIA_ROOT
         os.makedirs(temp_dir, exist_ok=True)
 
@@ -104,7 +121,15 @@ def download_audio(link):
                 'preferredquality': '192',
             }],
             'outtmpl': os.path.join(temp_dir, '%(id)s.%(ext)s'),
-            'verbose': True
+            'quiet': True,
+            'no_warnings': True,
+            'no_color': True,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            }
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
