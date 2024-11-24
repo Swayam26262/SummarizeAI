@@ -21,7 +21,6 @@ SummarizeAI is a cutting-edge platform that harnesses artificial intelligence to
 ## ✨ Features
 
 - 🎥 **YouTube Video Summarization** - Generate concise, structured summaries from any YouTube video
-- 🔍 **SEO Optimization** - Enhanced visibility through keyword research and optimized meta tags
 - 🔄 **Content Repurposing** - Convert videos into social media posts, blogs, and emails
 - 👥 **User-Friendly Interface** - Simple URL input process with quick results
 - 💾 **Saved Summaries** - Store and access your generated summaries anytime
