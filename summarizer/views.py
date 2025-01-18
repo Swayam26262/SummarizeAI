@@ -177,6 +177,7 @@ def get_transcription(link):
         print("Starting transcription...")
         transcript = transcriber.transcribe(audio_url, config=config)  # AssemblyAI can handle URLs directly
         print("Transcription completed successfully")
+        print(transcript.text)
         
         if not transcript.text or not transcript.summary:
             raise Exception("Transcription or summary is empty")
