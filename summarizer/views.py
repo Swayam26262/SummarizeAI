@@ -13,6 +13,8 @@ from django.conf import settings
 from .models import VideoSummary
 from django.http import StreamingHttpResponse
 import time
+import google.generativeai as genai
+import re
 
 # Index view to render the main page; requires user to be logged in
 @login_required
@@ -71,6 +73,9 @@ def generate_summary(request):
                 return JsonResponse({'error': "Failed to process video"}, status=500)
 
             try:
+                # Clean the summary content before saving
+                summary_content = clean_summary(summary_content)
+
                 # Save the generated summary to the database
                 request.session['progress_message'] = "Saving summary to database..."
                 new_summary = VideoSummary.objects.create(
@@ -174,9 +179,9 @@ def download_audio(link):
         print(f"Error in download_audio: {str(e)}")
         raise
 
-# Function to handle transcription of audio files using AssemblyAI
+# Function to handle transcription of audio files using AssemblyAI and summarize with Gemini AI
 def get_transcription(link):
-    """Get transcription from audio file using AssemblyAI."""
+    """Get transcription from audio file using AssemblyAI and summarize with Gemini AI."""
     try:
         print("Starting download_audio...")
         audio_url = download_audio(link)  # Download audio and get URL
@@ -198,13 +203,22 @@ def get_transcription(link):
         print("Transcription completed successfully")
         print(transcript.text)
 
-        if not transcript.text or not transcript.summary:
-            raise Exception("Transcription or summary is empty")
+        if not transcript.text:
+            raise Exception("Transcription is empty")
+
+        # Summarize the transcript using Gemini AI
+        genai.configure(api_key=os.getenv("GEMINI_API"))  # Use the API key from .env
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(transcript.text)  # Send transcript to Gemini AI
+        summary = response.text
+
+        if not summary:
+            raise Exception("Summary is empty")
 
         # Return transcription and summary
         return {
             'transcription': transcript.text,
-            'summary': transcript.summary
+            'summary': summary
         }
     except Exception as e:
         import traceback
@@ -302,3 +316,12 @@ def summary_details(request, pk):
 # View to render the contact page
 def contact(request):
     return render(request, 'contact.html')
+
+def clean_summary(summary):
+    """Remove unwanted Markdown and phrases from the summary."""
+    # Remove Markdown formatting like ** or *
+    cleaned_summary = re.sub(r'\*\*|\*', '', summary)
+    # Remove specific unwanted text
+    cleaned_summary = re.sub(r'This text is a jumbled description.*?version:', '', cleaned_summary, flags=re.DOTALL)
+    # Strip any extra whitespace
+    return cleaned_summary.strip()
