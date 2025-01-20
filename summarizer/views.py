@@ -15,6 +15,9 @@ from django.http import StreamingHttpResponse
 import time
 import google.generativeai as genai
 import re
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
 
 # Index view to render the main page; requires user to be logged in
 @login_required
@@ -227,6 +230,22 @@ def get_transcription(link):
         print(traceback.format_exc())
         raise
 
+# View to obtain JWT token
+class MyTokenObtainPairView(TokenObtainPairView):
+    # You can customize the token response here if needed
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        # Optionally add additional data to the response
+        response.data['message'] = 'Login successful'
+        return response
+
+# View to refresh JWT token
+class MyTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        response.data['message'] = 'Token refreshed successfully'
+        return response
+
 # Function to handle user login
 def user_login(request):
     """Handle user login."""
@@ -236,11 +255,17 @@ def user_login(request):
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            return redirect('/')
+            login(request, user)  # Optional: You can keep this for session-based login
+            # Generate JWT token
+            refresh = RefreshToken.for_user(user)
+            return JsonResponse({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'message': 'Login successful'
+            }, status=status.HTTP_200_OK)
         else:
             error_message = "Invalid username or password"
-            return render(request, 'login.html', {'error_message': error_message})
+            return JsonResponse({'error': error_message}, status=status.HTTP_401_UNAUTHORIZED)
 
     return render(request, 'login.html')
 
@@ -271,8 +296,8 @@ def user_signup(request):
 # Function to handle user logout
 def user_logout(request):
     """Handle user logout."""
-    logout(request)
-    return redirect('/')
+    logout(request)  # Optional: You can keep this for session-based logout
+    return JsonResponse({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
 
 # Function to stream real-time progress updates to the client
 def progress(request):

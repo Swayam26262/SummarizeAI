@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'summarizer',
     'cloudinary_storage',
     'cloudinary',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -177,4 +179,10 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = "Vflair.service@gmail.com"
 EMAIL_HOST_PASSWORD = "hcpq rehe qbny xnln"
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
